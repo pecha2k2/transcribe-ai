@@ -166,9 +166,9 @@ RUN ln -sf /etc/nginx/sites-available/transcribe-ai.conf /etc/nginx/sites-enable
     rm -f /etc/nginx/sites-enabled/default
 
 # ============================================
-# Environment File
+# Environment File (template - override at runtime)
 # ============================================
-COPY --chown=root:root .env /app/.env
+COPY --chown=root:root .env.example /app/.env
 
 # ============================================
 # Startup Scripts
