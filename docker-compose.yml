@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  transcribe-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: transcribe-ai
+    hostname: transcribe-ai
+    ports:
+      - "6001:6001"   # Frontend
+      - "6002:6002"   # Backend API
+    volumes:
+      - /mnt/user/commons/transcribe-ai:/data
+      - /mnt/user/commons/transcribe-ai/uploads:/app/uploads
+      - /mnt/user/commons/transcribe-ai/postgres:/var/lib/postgresql/data
+      - /mnt/user/commons/transcribe-ai/redis:/data
+      - /mnt/user/commons/transcribe-ai/logs:/var/log
+    environment:
+      - TZ=Europe/Madrid
+      - POSTGRES_DB=transcribeai
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=transcribeai_postgres_pass
+      - REDIS_PASSWORD=transcribeai_redis_pass
+      - JWT_SECRET=change-this-super-secret-jwt-key-in-production
+      - DATABASE_URL=postgresql://postgres:transcribeai_postgres_pass@localhost:5432/transcribeai
+      - REDIS_HOST=localhost
+      - REDIS_PORT=6379
+      - USE_LOCAL_STORAGE=true
+      - LOCAL_STORAGE_PATH=/app/uploads
+      - FRONTEND_URL=http://localhost:6001
+      - NEXT_PUBLIC_API_URL=http://localhost:6002
+    restart: unless-stopped
+    mem_limit: 0
+    cpus: 0
+    privileged: true
+
+networks:
+  default:
+    name: transcribe-ai-network
+    driver: bridge

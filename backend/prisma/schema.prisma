@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String
+  name          String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  projects      ProjectMember[]
+  jobs          Job[]
+}
+
+model Project {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  members     ProjectMember[]
+  jobs        Job[]
+}
+
+model ProjectMember {
+  id        String    @id @default(uuid())
+  userId    String
+  projectId String
+  role      Role      @default(VIEWER)
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
+}
+
+enum Role {
+  OWNER
+  EDITOR
+  VIEWER
+}
+
+model Job {
+  id          String    @id @default(uuid())
+  projectId   String?
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        JobType
+  status      JobStatus @default(PENDING)
+  fileUrl     String?
+  fileName    String?
+  mimeType    String?
+  duration    Float?
+  progress    Int       @default(0)
+  result      Json?
+  error       String?
+  tags        String[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum JobType {
+  UPLOAD
+  RECORD
+  TRANSCRIPTION
+  ANALYSIS
+}
+
+enum JobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model Transcript {
+  id          String    @id @default(uuid())
+  jobId       String    @unique
+  language    String?
+  duration    Float?
+  text        TextSegment[]
+  speakers    Speaker[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model TextSegment {
+  id           String    @id @default(uuid())
+  transcriptId String
+  speakerId    String?
+  start        Float
+  end          Float
+  content      String
+  transcript   Transcript @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
+  speaker      Speaker? @relation(fields: [speakerId], references: [id], onDelete: SetNull)
+}
+
+model Speaker {
+  id           String    @id @default(uuid())
+  transcriptId String
+  name         String?
+  role         String?
+  color        String?
+  transcript   Transcript @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
+  segments     TextSegment[]
+}
+
+model Analysis {
+  id              String    @id @default(uuid())
+  jobId           String    @unique
+  summary         String?
+  keyPoints       String[]
+  decisions       String[]
+  risks           String[]
+  openQuestions   String[]
+  tasks           Task[]
+  dates           DateExtracted[]
+  mindmap         String?
+  emailDraft      String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Task {
+  id          String     @id @default(uuid())
+  analysisId  String
+  description String
+  owner       String?
+  priority    Priority   @default(MEDIUM)
+  status      TaskStatus @default(OPEN)
+  dueDate     DateTime?
+  analysis    Analysis   @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TaskStatus {
+  OPEN
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+
+model DateExtracted {
+  id          String    @id @default(uuid())
+  analysisId  String
+  date        DateTime
+  description String?
+  analysis    Analysis  @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+}
