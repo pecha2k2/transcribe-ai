@@ -248,7 +248,7 @@ function extractTasksFromText(text: string, speakers: SpeakerRecord[]): Array<{d
   const matches = text.match(taskPatterns) || [];
   return matches.slice(0, 5).map((m, i) => ({
     description: m.substring(0, 60).trim(),
-    owner: speakers[i % speakers.length]?.name,
+    owner: speakers[i % speakers.length]?.name ?? undefined,
     priority: 'MEDIUM'
   }));
 }
