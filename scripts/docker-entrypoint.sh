@@ -5,7 +5,7 @@ echo "Transcribe AI - Entrypoint"
 echo "========================================="
 
 echo "[1/5] Creating directories..."
-mkdir -p /var/lib/postgresql/data /data /app/uploads /var/log/supervisor /var/log/nginx /tmp/mermaid
+mkdir -p /var/lib/postgresql/data /data /app/uploads /var/log/supervisor /var/log/nginx
 chown -R postgres:postgres /var/lib/postgresql 2>/dev/null || true
 chown -R redis:redis /data 2>/dev/null || true
 chmod 777 /app/uploads /data

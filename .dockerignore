@@ -1,0 +1,40 @@
+# Node modules — never needed in build context
+node_modules
+**/node_modules
+
+# Build artifacts (rebuilt in each stage)
+dist
+.next
+**/dist
+**/.next
+
+# Git
+.git
+.gitignore
+
+# Environment files — NEVER in image
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# TypeScript build info
+*.tsbuildinfo
+
+# IDE
+.vscode
+.idea
+
+# Test artifacts
+coverage
+.nyc_output
+
+# Uploads (runtime data, not part of image)
+uploads
