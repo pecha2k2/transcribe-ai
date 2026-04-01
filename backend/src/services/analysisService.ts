@@ -283,7 +283,14 @@ function generateMindmapFromBasic(text: string, speakers: SpeakerRecord[]): stri
 
 interface TranscriptArg { speakers: SpeakerRecord[] }
 
-export function generateMindmapFromTranscript(transcript: TranscriptArg, analysis: AnalysisResult): string {
+interface MindmapAnalysisInput {
+  summary?: string | null;
+  keyPoints?: string[];
+  decisions?: string[];
+  tasks?: Array<{ description?: string | null }>;
+}
+
+export function generateMindmapFromTranscript(transcript: TranscriptArg, analysis: MindmapAnalysisInput): string {
   const lines: string[] = ['mindmap', '  root((Meeting))'];
   
   if (analysis.summary) {
