@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { prisma } from '../index.js';
 
 export interface AuthRequest extends Request {
   userId?: string;
@@ -11,6 +10,12 @@ export const authMiddleware = async (
   res: Response,
   next: NextFunction
 ) => {
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) {
+    console.error('[AUTH] JWT_SECRET is not configured. Set it in your .env file.');
+    return res.status(500).json({ error: 'Server misconfiguration' });
+  }
+
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
 
@@ -18,7 +23,7 @@ export const authMiddleware = async (
       return res.status(401).json({ error: 'No token provided' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as { userId: string };
+    const decoded = jwt.verify(token, jwtSecret) as { userId: string };
     req.userId = decoded.userId;
 
     next();

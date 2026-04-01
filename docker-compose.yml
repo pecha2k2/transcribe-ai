@@ -16,24 +16,28 @@ services:
       - /mnt/user/commons/transcribe-ai/postgres:/var/lib/postgresql/data
       - /mnt/user/commons/transcribe-ai/redis:/data
       - /mnt/user/commons/transcribe-ai/logs:/var/log
+    env_file:
+      - .env
     environment:
-      - TZ=Europe/Madrid
-      - POSTGRES_DB=transcribeai
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=transcribeai_postgres_pass
-      - REDIS_PASSWORD=transcribeai_redis_pass
-      - JWT_SECRET=change-this-super-secret-jwt-key-in-production
-      - DATABASE_URL=postgresql://postgres:transcribeai_postgres_pass@localhost:5432/transcribeai
-      - REDIS_HOST=localhost
-      - REDIS_PORT=6379
-      - USE_LOCAL_STORAGE=true
-      - LOCAL_STORAGE_PATH=/app/uploads
-      - FRONTEND_URL=http://localhost:6001
-      - NEXT_PUBLIC_API_URL=http://localhost:6002
+      - TZ=${TZ:-Europe/Madrid}
+      - POSTGRES_DB=${POSTGRES_DB:-transcribeai}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_HOST=${REDIS_HOST:-localhost}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - USE_LOCAL_STORAGE=${USE_LOCAL_STORAGE:-true}
+      - LOCAL_STORAGE_PATH=${LOCAL_STORAGE_PATH:-/app/uploads}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:6001}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:6002}
+      - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
     restart: unless-stopped
-    mem_limit: 0
-    cpus: 0
-    privileged: true
+    mem_limit: 4g
+    cpus: 2
 
 networks:
   default:

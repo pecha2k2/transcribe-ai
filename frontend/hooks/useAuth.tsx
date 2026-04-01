@@ -1,10 +1,10 @@
 'use client';
 
 import { createContext, useContext, useEffect, ReactNode } from 'react';
-import { useAuthStore } from './useAuthStore';
+import { useAuthStore, User } from './useAuthStore';
 
 interface AuthContextType {
-  user: any;
+  user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name?: string) => Promise<void>;

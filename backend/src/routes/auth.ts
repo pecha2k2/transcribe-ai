@@ -7,11 +7,13 @@ import { authMiddleware, AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 
-const generateToken = (userId: string) => {
+const generateToken = (userId: string): string => {
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) {
+    throw new Error('JWT_SECRET is not configured');
+  }
   const expiresIn = (process.env.JWT_EXPIRES_IN || '7d') as string;
-  return jwt.sign({ userId }, process.env.JWT_SECRET || 'secret', {
-    expiresIn
-  } as jwt.SignOptions);
+  return jwt.sign({ userId }, jwtSecret, { expiresIn } as jwt.SignOptions);
 };
 
 router.post('/register', [
@@ -100,7 +102,11 @@ router.post('/refresh', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Refresh token required' });
     }
 
-    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET || 'secret') as { userId: string };
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      return res.status(500).json({ error: 'Server misconfiguration' });
+    }
+    const decoded = jwt.verify(refreshToken, jwtSecret) as { userId: string };
     const token = generateToken(decoded.userId);
 
     res.json({ token });

@@ -135,13 +135,13 @@ ${fullText}`;
       decisions: analysis.decisions || [],
       risks: analysis.risks || [],
       openQuestions: analysis.openQuestions || [],
-      tasks: (analysis.tasks || []).map((t: any) => ({
+      tasks: (analysis.tasks || []).map((t: Record<string, string | undefined>) => ({
         description: t.description || t.descripcion || '',
         owner: t.owner || t.asignado || undefined,
         priority: t.priority || t.prioridad || 'MEDIUM',
         dueDate: t.dueDate || t.fechaLimite || undefined
       })),
-      dates: (analysis.dates || []).map((d: any) => ({
+      dates: (analysis.dates || []).map((d: Record<string, string | undefined>) => ({
         date: d.date || d.fecha || '',
         description: d.description || d.descripcion || ''
       })),
@@ -153,7 +153,7 @@ ${fullText}`;
   }
 }
 
-function generateMindmapFromAnalysis(analysis: any): string {
+function generateMindmapFromAnalysis(analysis: AnalysisResult): string {
   const lines: string[] = ['mindmap', '  root((Meeting))'];
   
   if (analysis.summary) {
@@ -167,21 +167,21 @@ function generateMindmapFromAnalysis(analysis: any): string {
       lines.push(`      ${escapeMermaid(kp)}`);
     });
   }
-  
+
   if (analysis.decisions && analysis.decisions.length > 0) {
     lines.push(`    Decisions`);
     analysis.decisions.forEach((d: string) => {
       lines.push(`      ${escapeMermaid(d)}`);
     });
   }
-  
+
   if (analysis.tasks && analysis.tasks.length > 0) {
     lines.push(`    Tasks`);
-    analysis.tasks.forEach((t: any) => {
+    analysis.tasks.forEach((t) => {
       lines.push(`      ${escapeMermaid(t.description || '')}`);
     });
   }
-  
+
   return lines.join('\n');
 }
 
@@ -199,7 +199,9 @@ function escapeMermaid(text: string): string {
     .trim();
 }
 
-function generateBasicAnalysis(text: string, speakers: any[]): AnalysisResult {
+interface SpeakerRecord { name?: string | null }
+
+function generateBasicAnalysis(text: string, speakers: SpeakerRecord[]): AnalysisResult {
   const words = text.split(' ');
   const speakerNames = speakers.map(s => s.name || 'Participante').join(', ');
   
@@ -241,7 +243,7 @@ function extractQuestionsFromText(text: string): string[] {
   return matches.slice(0, 3).map(m => m.trim());
 }
 
-function extractTasksFromText(text: string, speakers: any[]): Array<{description: string, owner?: string, priority: string, dueDate?: string}> {
+function extractTasksFromText(text: string, speakers: SpeakerRecord[]): Array<{description: string, owner?: string, priority: string, dueDate?: string}> {
   const taskPatterns = /(?:tarea|acción|encargo|responsabilidad)[^.]*[:\s]+([^.]+)/gi;
   const matches = text.match(taskPatterns) || [];
   return matches.slice(0, 5).map((m, i) => ({
@@ -260,7 +262,7 @@ function extractDatesFromText(text: string): Array<{date: string, description: s
   }));
 }
 
-function generateMindmapFromBasic(text: string, speakers: any[]): string {
+function generateMindmapFromBasic(text: string, speakers: SpeakerRecord[]): string {
   const sentences = text.match(/[^.!?]+[.!?]+/g) || [text.substring(0, 100)];
   
   let mermaid = 'mindmap\n';
@@ -279,7 +281,9 @@ function generateMindmapFromBasic(text: string, speakers: any[]): string {
   return mermaid;
 }
 
-export function generateMindmapFromTranscript(transcript: any, analysis: any): string {
+interface TranscriptArg { speakers: SpeakerRecord[] }
+
+export function generateMindmapFromTranscript(transcript: TranscriptArg, analysis: AnalysisResult): string {
   const lines: string[] = ['mindmap', '  root((Meeting))'];
   
   if (analysis.summary) {
@@ -293,24 +297,24 @@ export function generateMindmapFromTranscript(transcript: any, analysis: any): s
       lines.push(`      ${escapeMermaid(kp)}`);
     });
   }
-  
+
   if (analysis.decisions && analysis.decisions.length > 0) {
     lines.push('    Decisions');
     analysis.decisions.forEach((d: string) => {
       lines.push(`      ${escapeMermaid(d)}`);
     });
   }
-  
+
   if (analysis.tasks && analysis.tasks.length > 0) {
     lines.push('    Tasks');
-    analysis.tasks.forEach((t: any) => {
+    analysis.tasks.forEach((t) => {
       lines.push(`      ${escapeMermaid(t.description || '')}`);
     });
   }
-  
+
   if (transcript.speakers && transcript.speakers.length > 0) {
     lines.push('    Participants');
-    transcript.speakers.forEach((s: any) => {
+    transcript.speakers.forEach((s) => {
       lines.push(`      ${escapeMermaid(s.name || 'Participant')}`);
     });
   }

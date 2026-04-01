@@ -1,8 +1,9 @@
 'use client';
 
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
-interface User {
+export interface User {
   id: string;
   email: string;
   name?: string;
@@ -19,13 +20,21 @@ interface AuthState {
   logout: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  token: null,
-  currentJobId: null,
-  currentView: null,
-  setAuth: (user, token) => set({ user, token }),
-  setCurrentJob: (jobId) => set({ currentJobId: jobId }),
-  setView: (view) => set({ currentView: view }),
-  logout: () => set({ user: null, token: null, currentJobId: null, currentView: null }),
-}));
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      user: null,
+      token: null,
+      currentJobId: null,
+      currentView: null,
+      setAuth: (user, token) => set({ user, token }),
+      setCurrentJob: (jobId) => set({ currentJobId: jobId }),
+      setView: (view) => set({ currentView: view }),
+      logout: () => set({ user: null, token: null, currentJobId: null, currentView: null }),
+    }),
+    {
+      name: 'transcribe-ai-auth',
+      partialize: (state) => ({ user: state.user, token: state.token }),
+    }
+  )
+);
