@@ -1,5 +1,6 @@
 import { Router, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
+import { JobStatus } from '@prisma/client';
 import { prisma } from '../index.js';
 import { authMiddleware, AuthRequest } from '../middleware/auth.js';
 import { addTranscriptionJob } from '../workers/queue.js';
@@ -27,7 +28,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         userId: req.userId!,
         projectId: projectId || null,
         type: 'RECORD',
-        status: 'PROCESSING',
+        status: JobStatus.PROCESSING,
         fileName: filename || 'Recording',
         fileUrl: `/uploads/${fileName}`,
         mimeType: 'audio/webm',

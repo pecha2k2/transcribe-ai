@@ -1,4 +1,5 @@
 import { Router, Response } from 'express';
+import { JobStatus } from '@prisma/client';
 import multer from 'multer';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -42,7 +43,7 @@ router.post('/', authMiddleware, upload.single('file'), async (req: AuthRequest,
         userId: req.userId!,
         projectId: projectId || null,
         type: 'UPLOAD',
-        status: 'PROCESSING',
+        status: JobStatus.PROCESSING,
         fileName: req.file.originalname,
         fileUrl: `/uploads/${req.file.filename}`,
         mimeType: req.file.mimetype,

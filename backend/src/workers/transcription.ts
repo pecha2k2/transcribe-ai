@@ -1,5 +1,6 @@
 import fs from 'fs';
 import { Worker, Job } from 'bullmq';
+import { JobStatus, Priority, TaskStatus } from '@prisma/client';
 import { redisConnection } from './queue.js';
 import { prisma } from '../utils/prisma.js';
 import { transcribeAudio } from '../services/transcriptionService.js';
@@ -28,9 +29,9 @@ async function processTranscription(job: Job<TranscriptionJobData>): Promise<voi
   const { jobId, filePath } = job.data;
   console.log(`[TRANSCRIPTION] Starting job ${jobId}`);
 
-  const updateProgress = async (progress: number, forceStatus?: string): Promise<void> => {
+  const updateProgress = async (progress: number, forceStatus?: JobStatus): Promise<void> => {
     try {
-      const data: { progress: number; status?: string } = { progress };
+      const data: { progress: number; status?: JobStatus } = { progress };
       if (forceStatus) data.status = forceStatus;
       await prisma.job.update({ where: { id: jobId }, data });
     } catch (e: unknown) {
@@ -40,16 +41,16 @@ async function processTranscription(job: Job<TranscriptionJobData>): Promise<voi
   };
 
   try {
-    await updateProgress(5, 'PROCESSING');
+    await updateProgress(5, JobStatus.PROCESSING);
     await transcribeAudio(filePath, jobId, updateProgress);
     console.log(`[TRANSCRIPTION] Transcription complete for job ${jobId}`);
-    await updateProgress(100, 'COMPLETED');
+    await updateProgress(100, JobStatus.COMPLETED);
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error(`[TRANSCRIPTION] Error for job ${jobId}:`, msg);
     await prisma.job.update({
       where: { id: jobId },
-      data: { status: 'FAILED', error: msg }
+      data: { status: JobStatus.FAILED, error: msg }
     });
     throw error;
   } finally {
@@ -65,7 +66,7 @@ async function processAnalysis(job: Job<AnalysisJobData>): Promise<void> {
     try {
       await prisma.job.update({
         where: { id: jobId },
-        data: { status: 'PROCESSING', progress }
+        data: { status: JobStatus.PROCESSING, progress }
       });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -95,8 +96,8 @@ async function processAnalysis(job: Job<AnalysisJobData>): Promise<void> {
             create: analysisResult.tasks.map((t) => ({
               description: t.description,
               owner: t.owner,
-              priority: t.priority || 'MEDIUM',
-              status: 'OPEN',
+              priority: (t.priority as Priority) || Priority.MEDIUM,
+              status: TaskStatus.OPEN,
               dueDate: t.dueDate ? new Date(t.dueDate) : null
             }))
           },
@@ -113,14 +114,14 @@ async function processAnalysis(job: Job<AnalysisJobData>): Promise<void> {
     }
 
     await updateProgress(100);
-    await prisma.job.update({ where: { id: jobId }, data: { status: 'COMPLETED' } });
+    await prisma.job.update({ where: { id: jobId }, data: { status: JobStatus.COMPLETED } });
     console.log(`[ANALYSIS] Job ${jobId} analysis complete`);
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error(`[ANALYSIS] Error for job ${jobId}:`, msg);
     await prisma.job.update({
       where: { id: jobId },
-      data: { status: 'FAILED', error: msg }
+      data: { status: JobStatus.FAILED, error: msg }
     });
     throw error;
   }
